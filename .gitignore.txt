@@ -1,0 +1,10 @@
+# Gradle
+.gradle/
+backend/build/
+
+# IntelliJ
+.idea/
+*.iml
+
+# OS
+Thumbs.db
