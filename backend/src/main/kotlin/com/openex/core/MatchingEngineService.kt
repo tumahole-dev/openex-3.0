@@ -6,11 +6,15 @@ import java.math.BigDecimal
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
+data class OrderBookLevel(val price: BigDecimal, val quantity: BigDecimal)
+data class OrderBookSnapshot(val symbol: String, val bids: List<OrderBookLevel>, val asks: List<OrderBookLevel>)
+
 @Service
 class MatchingEngineService(
     private val orderRepository: OrderRepository,
     private val tradeRepository: TradeRepository,
-    private val ledgerService: LedgerService
+    private val ledgerService: LedgerService,
+    private val messagingTemplate: org.springframework.messaging.simp.SimpMessagingTemplate
 ) {
     // One order book per trading symbol, e.g. "BTC/USD".
     private data class RestingOrder(val order: Order, var remaining: BigDecimal)
@@ -38,7 +42,20 @@ class MatchingEngineService(
         }
 
         finalizeStatus(order, incoming.remaining)
-        return orderRepository.save(order)
+        val saved = orderRepository.save(order)
+        broadcastBook(order.symbol)
+        return saved
+    }
+
+    fun snapshot(symbol: String): OrderBookSnapshot {
+        val book = bookFor(symbol)
+        val bids = book.bids.entries.map { (price, queue) -> OrderBookLevel(price, queue.fold(BigDecimal.ZERO) { acc, o -> acc.add(o.remaining) }) }
+        val asks = book.asks.entries.map { (price, queue) -> OrderBookLevel(price, queue.fold(BigDecimal.ZERO) { acc, o -> acc.add(o.remaining) }) }
+        return OrderBookSnapshot(symbol, bids, asks)
+    }
+
+    private fun broadcastBook(symbol: String) {
+        messagingTemplate.convertAndSend("/topic/orderbook/$symbol", snapshot(symbol))
     }
 
     private fun matchAgainst(

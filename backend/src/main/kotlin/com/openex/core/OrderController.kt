@@ -47,6 +47,10 @@ class OrderController(
         return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse())
     }
 
+    @GetMapping("/book/{symbol}")
+    fun orderBook(@PathVariable symbol: String): OrderBookSnapshot =
+        matchingEngineService.snapshot(symbol.replace("-", "/"))
+
     private fun Order.toResponse() = OrderResponse(
         id = id, symbol = symbol, side = side, type = type, price = price,
         quantity = quantity, filledQuantity = filledQuantity, status = status, createdAt = createdAt
