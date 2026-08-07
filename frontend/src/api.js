@@ -19,4 +19,12 @@ export const walletApi = {
     deposit: (currency, amount) => client.post("/wallets/deposit", { currency, amount }),
 };
 
+export const orderApi = {
+    place: (order) =>
+        client.post("/orders", order, {
+            headers: { "Idempotency-Key": crypto.randomUUID() },
+        }),
+    book: (symbol) => client.get(`/orders/book/${symbol.replace("/", "-")}`),
+};
+
 export default client;

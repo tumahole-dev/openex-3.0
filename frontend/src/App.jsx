@@ -2,10 +2,8 @@ import { Routes, Route, Link, Navigate } from "react-router-dom";
 import Login from "./Login.jsx";
 import Register from "./Register.jsx";
 import Dashboard from "./Dashboard.jsx";
+import Trading from "./Trading.jsx";
 
-function Trading() {
-    return <h2>Trading Terminal (placeholder)</h2>;
-}
 
 export default function App() {
     const isLoggedIn = !!localStorage.getItem("openex_token");
