@@ -10,6 +10,7 @@ import java.util.UUID
 @RestController
 @RequestMapping("/api/orders")
 class OrderController(
+    private val matchingEngineService: MatchingEngineService,
     private val orderRepository: OrderRepository,
     private val idempotencyRecordRepository: IdempotencyRecordRepository
 ) {
@@ -19,39 +20,31 @@ class OrderController(
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
         @Valid @RequestBody request: PlaceOrderRequest
     ): ResponseEntity<OrderResponse> {
-        // Seen this key before? Hand back the same order, don't create a new one.
         idempotencyRecordRepository.findByKey(idempotencyKey)?.let { cached ->
             val existingOrder = orderRepository.findById(UUID.fromString(cached.responseBody)).orElseThrow()
             return ResponseEntity.status(cached.statusCode).body(existingOrder.toResponse())
         }
 
         val userId = currentUserId()
-        val order = orderRepository.save(
-            Order(
-                userId = userId,
-                symbol = request.symbol,
-                side = request.side,
-                type = request.type,
-                price = request.price,
-                quantity = request.quantity
-            )
+        val order = Order(
+            userId = userId,
+            symbol = request.symbol,
+            side = request.side,
+            type = request.type,
+            price = request.price,
+            quantity = request.quantity
         )
+        val saved = matchingEngineService.submit(order)
 
         try {
             idempotencyRecordRepository.save(
-                IdempotencyRecord(
-                    key = idempotencyKey,
-                    responseBody = order.id.toString(),
-                    statusCode = HttpStatus.CREATED.value()
-                )
+                IdempotencyRecord(key = idempotencyKey, responseBody = saved.id.toString(), statusCode = HttpStatus.CREATED.value())
             )
         } catch (e: DataIntegrityViolationException) {
-            // Two identical requests arrived at the same instant and both got
-            // this far — the database's unique constraint caught the second
-            // one. That's fine, the order we just made is still valid.
+            // Concurrent identical retry — the order already exists, that's fine.
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(order.toResponse())
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse())
     }
 
     private fun Order.toResponse() = OrderResponse(
