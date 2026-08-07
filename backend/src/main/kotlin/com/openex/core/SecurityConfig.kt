@@ -24,6 +24,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
         config.allowedOrigins = listOf("http://localhost:5173")
         config.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         config.allowedHeaders = listOf("*")
+        config.allowCredentials = true   // ADDED
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", config)
         return source
@@ -37,7 +38,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/api/auth/**", "/api/status", "/actuator/**").permitAll()
+                    .requestMatchers("/api/auth/**", "/api/status", "/actuator/**", "/ws/**").permitAll()  // ADDED /ws/**
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)

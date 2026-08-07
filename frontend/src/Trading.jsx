@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { orderApi } from "./api.js";
+import OrderBook from "./OrderBook.jsx";
 
 export default function Trading() {
     const symbol = "BTC/USD";
@@ -31,6 +32,7 @@ export default function Trading() {
     return (
         <div>
             <h2>Trading — {symbol}</h2>
+            <OrderBook symbol={symbol}/>
             <form onSubmit={handleSubmit}>
                 <select value={side} onChange={(e) => setSide(e.target.value)}>
                     <option value="BUY">Buy</option>
