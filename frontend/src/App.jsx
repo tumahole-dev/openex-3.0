@@ -1,32 +1,31 @@
-import { Routes, Route, Link } from "react-router-dom";
-
-function Dashboard() {
-  return <h2>Wallet Dashboard (placeholder)</h2>;
-}
+import { Routes, Route, Link, Navigate } from "react-router-dom";
+import Login from "./Login.jsx";
+import Register from "./Register.jsx";
+import Dashboard from "./Dashboard.jsx";
 
 function Trading() {
-  return <h2>Trading Terminal (placeholder)</h2>;
-}
-
-function Login() {
-  return <h2>Login (placeholder)</h2>;
+    return <h2>Trading Terminal (placeholder)</h2>;
 }
 
 export default function App() {
-  return (
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
-        <nav style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-          <strong>⚔️ OpenEx</strong>
-          <Link to="/login">Login</Link>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/trading">Trading</Link>
-        </nav>
+    const isLoggedIn = !!localStorage.getItem("openex_token");
 
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/trading" element={<Trading />} />
-        </Routes>
-      </div>
-  );
+    return (
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
+            <nav style={{ display: "flex", gap: 16, marginBottom: 20 }}>
+                <strong>⚔️ OpenEx</strong>
+                {!isLoggedIn && <Link to="/login">Login</Link>}
+                {isLoggedIn && <Link to="/dashboard">Dashboard</Link>}
+                {isLoggedIn && <Link to="/trading">Trading</Link>}
+            </nav>
+
+            <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/trading" element={<Trading />} />
+                <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} />} />
+            </Routes>
+        </div>
+    );
 }
