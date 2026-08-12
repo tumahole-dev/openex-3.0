@@ -6,20 +6,32 @@ that's a deliberate limit, not a missing feature.
 import os
 
 import requests
-from langchain.agents import AgentType, Tool, initialize_agent
-from langchain_ollama import OllamaLLM
+from langchain.agents import create_agent
+from langchain.tools import tool
+from langchain_ollama import ChatOllama
 
 CORE_API_URL = os.getenv("CORE_API_URL", "http://localhost:8080")
 
 SYSTEM_PREAMBLE = (
-    "You are the OpenEx trading terminal's onboard assistant. You can look "
-    "up the user's own wallet balances using your tool. You never place, "
-    "suggest, or execute trades, and you never give financial advice."
+    "You are the OpenEx trading terminal's onboard assistant. "
+    "You have exactly one tool: get_wallet_balances. "
+    "If the user asks anything about their balance, holdings, or wallet, "
+    "you MUST call get_wallet_balances before answering — never guess or "
+    "invent numbers. If the tool fails or is unavailable, say so plainly "
+    "instead of making up a balance. "
+    "You never place, suggest, or execute trades, and you never give "
+    "financial advice."
 )
 
 
-def _make_wallet_tool(bearer_token: str) -> Tool:
-    def _get_wallet_balances(_: str) -> str:
+def ask(message: str, bearer_token: str) -> str:
+    if not bearer_token:
+        return "Log in first so I can look up your wallet."
+
+    @tool
+    def get_wallet_balances(_: str = "") -> str:
+        """Look up the current user's wallet balances across all currencies."""
+        print(">>> get_wallet_balances tool was called")  # debug marker
         try:
             response = requests.get(
                 f"{CORE_API_URL}/api/wallets",
@@ -28,33 +40,18 @@ def _make_wallet_tool(bearer_token: str) -> Tool:
             )
             response.raise_for_status()
             balances = response.json()
-            return ", ".join(f"{b['currency']}: {b['balance']}" for b in balances)
+            result = ", ".join(f"{b['currency']}: {b['balance']}" for b in balances)
+            print(f">>> tool result: {result}")  # debug marker
+            return result
         except requests.RequestException as exc:
+            print(f">>> tool error: {exc}")  # debug marker
             return f"Could not reach the wallet service: {exc}"
 
-    return Tool(
-        name="get_wallet_balances",
-        func=_get_wallet_balances,
-        description="Look up the current user's wallet balances across all currencies. Input is ignored, pass an empty string.",
-    )
-
-
-def ask(message: str, bearer_token: str) -> str:
-    if not bearer_token:
-        return "Log in first so I can look up your wallet."
-
-    llm = OllamaLLM(model="llama3", temperature=0.2)
-    tools = [_make_wallet_tool(bearer_token)]
-    agent = initialize_agent(
-        tools=tools,
-        llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=False,
-        handle_parsing_errors=True,
-        agent_kwargs={"prefix": SYSTEM_PREAMBLE},
-    )
+    llm = ChatOllama(model="llama3.1", temperature=0)
+    agent = create_agent(model=llm, tools=[get_wallet_balances], system_prompt=SYSTEM_PREAMBLE)
 
     try:
-        return agent.run(message)
+        result = agent.invoke({"messages": [{"role": "user", "content": message}]})
+        return result["messages"][-1].content
     except Exception as exc:
         return f"The droid glitched: {exc}"
