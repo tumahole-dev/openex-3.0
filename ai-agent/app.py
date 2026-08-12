@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 import market_simulator
+import agent
 
 app = Flask(__name__)
 CORS(app)
@@ -25,6 +26,14 @@ def market(symbol):
         "latestPrice": market_simulator.get_latest_price(symbol),
     })
 
+@app.post("/api/chat")
+def chat():
+    from flask import request
+    body = request.get_json(force=True) or {}
+    message = body.get("message", "").strip()
+    if not message:
+        return jsonify({"error": "message is required"}), 400
+    return jsonify({"reply": agent.ask(message)})
 
 if __name__ == "__main__":
     app.run(port=5000, debug=False)
