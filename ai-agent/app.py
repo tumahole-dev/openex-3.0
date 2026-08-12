@@ -31,9 +31,10 @@ def chat():
     from flask import request
     body = request.get_json(force=True) or {}
     message = body.get("message", "").strip()
+    token = body.get("token")
     if not message:
         return jsonify({"error": "message is required"}), 400
-    return jsonify({"reply": agent.ask(message)})
+    return jsonify({"reply": agent.ask(message, token)})
 
 if __name__ == "__main__":
     app.run(port=5000, debug=False)
