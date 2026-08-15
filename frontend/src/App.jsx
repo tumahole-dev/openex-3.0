@@ -8,6 +8,12 @@ import Trading from "./Trading.jsx";
 export default function App() {
     const isLoggedIn = !!localStorage.getItem("openex_token");
 
+    function handleLogout() {
+  localStorage.removeItem("openex_token");
+  localStorage.removeItem("openex_email");
+  window.location.href = "/login";
+}
+
     return (
         <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
             <nav style={{ display: "flex", gap: 16, marginBottom: 20 }}>
@@ -15,6 +21,7 @@ export default function App() {
                 {!isLoggedIn && <Link to="/login">Login</Link>}
                 {isLoggedIn && <Link to="/dashboard">Dashboard</Link>}
                 {isLoggedIn && <Link to="/trading">Trading</Link>}
+                {isLoggedIn && <button onClick={handleLogout}>Log out</button>}
             </nav>
 
             <Routes>
