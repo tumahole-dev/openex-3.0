@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authApi } from "./api.js";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -15,7 +14,7 @@ export default function Login() {
             const { data } = await authApi.login(email, password);
             localStorage.setItem("openex_token", data.token);
             localStorage.setItem("openex_email", data.email);
-            navigate("/dashboard");
+            window.location.href = "/dashboard";
         } catch (err) {
             setError(err.response?.data?.error ?? "Login failed");
         }
