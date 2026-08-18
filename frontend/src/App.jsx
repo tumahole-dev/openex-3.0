@@ -23,6 +23,8 @@ function RequireAuth({ children }) {
 export default function App() {
   const isLoggedIn = !!localStorage.getItem("openex_token");
   const email = localStorage.getItem("openex_email");
+  const name = localStorage.getItem("openex_name");
+  const displayName = name || email;
 
   function handleLogout() {
     localStorage.removeItem("openex_token");
@@ -43,7 +45,7 @@ export default function App() {
         <div className="spacer" />
         {isLoggedIn && (
           <>
-            <span className="user-email">{email}</span>
+            <span className="user-email">{displayName}</span>
             <button className="ghost" onClick={handleLogout}>Log out</button>
           </>
         )}

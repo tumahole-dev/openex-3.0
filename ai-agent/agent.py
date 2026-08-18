@@ -47,7 +47,7 @@ def ask(message: str, bearer_token: str) -> str:
             print(f">>> tool error: {exc}")  # debug marker
             return f"Could not reach the wallet service: {exc}"
 
-    llm = ChatOllama(model="llama3.2:3b", temperature=0)
+    llm = ChatOllama(model="llama3.1", temperature=0)
     agent = create_agent(model=llm, tools=[get_wallet_balances], system_prompt=SYSTEM_PREAMBLE)
 
     try:

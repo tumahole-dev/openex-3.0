@@ -18,9 +18,10 @@ class AuthService(
             throw EmailAlreadyRegisteredException("Email ${request.email} is already registered")
         }
         val user = userRepository.save(
-            User(email = request.email, passwordHash = passwordEncoder.encode(request.password)!!)
+            User(email = request.email, passwordHash = passwordEncoder.encode(request.password)!!,
+                fullName = request.fullName?.takeIf { it.isNotBlank() })
         )
-        return AuthResponse(jwtService.generateToken(user.id, user.email), user.id, user.email)
+        return AuthResponse(jwtService.generateToken(user.id, user.email), user.id, user.email, user.fullName)
     }
 
     fun login(request: LoginRequest): AuthResponse {
@@ -29,6 +30,6 @@ class AuthService(
         if (!passwordEncoder.matches(request.password, user.passwordHash)) {
             throw InvalidCredentialsException("Invalid email or password")
         }
-        return AuthResponse(jwtService.generateToken(user.id, user.email), user.id, user.email)
+        return AuthResponse(jwtService.generateToken(user.id, user.email), user.id, user.email, user.fullName)
     }
 }
