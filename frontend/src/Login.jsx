@@ -16,6 +16,7 @@ export default function Login() {
       const { data } = await authApi.login(email, password);
       localStorage.setItem("openex_token", data.token);
       localStorage.setItem("openex_email", data.email);
+      localStorage.setItem("openex_name", data.fullName ?? "");
       window.location.href = "/dashboard";
     } catch (err) {
       setError(err.response?.data?.error ?? "Login failed");

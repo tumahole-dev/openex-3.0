@@ -10,7 +10,7 @@ client.interceptors.request.use((config) => {
 });
 
 export const authApi = {
-    register: (email, password) => client.post("/auth/register", { email, password }),
+    register: (email, password, fullName) => client.post("/auth/register", { email, password, fullName }),
     login: (email, password) => client.post("/auth/login", { email, password }),
 };
 
