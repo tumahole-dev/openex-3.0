@@ -27,4 +27,7 @@ export const orderApi = {
     book: (symbol) => client.get(`/orders/book/${symbol.replace("/", "-")}`),
 };
 
+export const positionApi = {
+    get: (symbol) => client.get(`/positions/${symbol.replace("/", "-")}`),
+};
 export default client;

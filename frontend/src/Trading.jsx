@@ -3,6 +3,7 @@ import { orderApi } from "./api.js";
 import OrderBook from "./OrderBook.jsx";
 import MarketChart from "./MarketChart.jsx";
 import ChatWidget from "./ChatWidget.jsx";
+import Position from "./Position.jsx";
 
 const STATUS_CLASS = { OPEN: "open", FILLED: "filled", PARTIALLY_FILLED: "partial", CANCELLED: "cancelled" };
 
@@ -15,11 +16,13 @@ export default function Trading() {
     const [result, setResult] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     async function handleSubmit(e) {
         e.preventDefault();
         setError("");
         setResult(null);
+        setRefreshKey((k) => k + 1);
         setLoading(true);
         try {
             const { data } = await orderApi.place({
@@ -39,6 +42,7 @@ export default function Trading() {
         <div>
             <MarketChart symbol={symbol} />
             <OrderBook symbol={symbol} />
+            <Position symbol={symbol} refreshKey={refreshKey} onClosed={() => setRefreshKey((k) => k + 1)} />
 
             <div className="card">
                 <div className="eyebrow">Place order — {symbol}</div>
