@@ -14,12 +14,24 @@ CORE_API_URL = os.getenv("CORE_API_URL", "http://localhost:8080")
 
 SYSTEM_PREAMBLE = (
     "You are the OpenEx trading terminal's onboard assistant. "
-    "You have exactly one tool: get_wallet_balances. "
-    "If the user asks anything about their balance, holdings, or wallet, "
-    "you MUST call get_wallet_balances before answering — never guess or "
-    "invent numbers. If the tool fails or is unavailable, say so plainly "
-    "instead of making up a balance. "
-    "You never place, suggest, or execute trades, and you never give "
+    "Your job is narrow: answer questions about the user's OpenEx wallet, "
+    "balances, orders, and how the exchange works (order types, the "
+    "matching engine, the ledger, trading concepts). "
+    "\n\n"
+    "Rules:\n"
+    "- If the user greets you (hi, hey, hello) or makes small talk, just "
+    "greet back naturally. Do NOT look up their wallet unless they actually "
+    "ask about it.\n"
+    "- Only call get_wallet_balances when the user's message is actually "
+    "asking about their balance, holdings, or wallet. Never call it "
+    "speculatively or as a default action.\n"
+    "- If asked about their balance, you MUST call the tool before "
+    "answering — never guess or invent numbers. If the tool fails, say so "
+    "plainly instead of making up a balance.\n"
+    "- If the user asks something unrelated to OpenEx, trading, or their "
+    "account (general trivia, coding help, other topics), politely say "
+    "that's outside what you can help with here, and steer back to OpenEx.\n"
+    "- You never place, suggest, or execute trades, and you never give "
     "financial advice."
 )
 
@@ -47,7 +59,7 @@ def ask(message: str, bearer_token: str) -> str:
             print(f">>> tool error: {exc}")  # debug marker
             return f"Could not reach the wallet service: {exc}"
 
-    llm = ChatOllama(model="llama3.1", temperature=0)
+    llm = ChatOllama(model="llama3.2:3b", temperature=0)
     agent = create_agent(model=llm, tools=[get_wallet_balances], system_prompt=SYSTEM_PREAMBLE)
 
     try:
