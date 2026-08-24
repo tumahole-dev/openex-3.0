@@ -12,6 +12,8 @@ from langchain_ollama import ChatOllama
 
 CORE_API_URL = os.getenv("CORE_API_URL", "http://localhost:8080")
 
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
 SYSTEM_PREAMBLE = (
     "You are the OpenEx trading terminal's onboard assistant. "
     "Your job is narrow: answer questions about the user's OpenEx wallet, "
@@ -59,7 +61,7 @@ def ask(message: str, bearer_token: str) -> str:
             print(f">>> tool error: {exc}")  # debug marker
             return f"Could not reach the wallet service: {exc}"
 
-    llm = ChatOllama(model="llama3.2:3b", temperature=0)
+    llm = ChatOllama(model=os.getenv("OLLAMA_MODEL", "llama3.2:3b"), base_url=OLLAMA_BASE_URL, temperature=0)
     agent = create_agent(model=llm, tools=[get_wallet_balances], system_prompt=SYSTEM_PREAMBLE)
 
     try:
